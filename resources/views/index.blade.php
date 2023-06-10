@@ -3,5 +3,9 @@
 @section('title', 'All tasks list')
 
 @section('content')
-    <h1>Task list</h1>
+    @forelse ($tasks as $task)
+        <li><a href="{{ route('tasks.show', $task) }}">{{ $task->title }}</a></li>
+    @empty
+        <h1>No task</h1>
+    @endforelse
 @endsection
