@@ -50,6 +50,9 @@ services:
             timeout: 5s
     adminer:
         image: adminer
+        environment:
+            ADMINER_DEFAULT_SERVER: 'mariadb'
+            ADMINER_DEFAULT_DB_NAME: '${DB_DATABASE}'
         ports:
             - 8080:8080
         networks:
