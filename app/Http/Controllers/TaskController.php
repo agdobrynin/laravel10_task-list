@@ -1,0 +1,84 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Dto\TaskDto;
+use App\Models\Task;
+use Illuminate\Support\Str;
+use App\Http\Requests\TaskRequest;
+
+class TaskController extends Controller
+{
+    /**
+     * Display a listing of the resource.
+     */
+    public function index()
+    {
+        return view('tasks.index', ['tasks' => Task::latest()->paginate()]);
+    }
+
+    /**
+     * Show the form for creating a new resource.
+     */
+    public function create()
+    {
+        return view('tasks.create');
+    }
+
+    /**
+     * Store a newly created resource in storage.
+     */
+    public function store(TaskRequest $request)
+    {
+        $dto = new TaskDto(...$request->validated());
+
+        $task = Task::create((array)$dto);
+
+        return redirect()->route('tasks.show', $task)
+            ->with('success', 'New task was created');
+    }
+
+    /**
+     * Display the specified resource.
+     */
+    public function show(Task $task)
+    {
+        return view('tasks.show', ['task' => $task]);
+    }
+
+    /**
+     * Show the form for editing the specified resource.
+     */
+    public function edit(Task $task)
+    {
+        return view('tasks.edit', ['task' => $task]);
+    }
+
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(TaskRequest $request, Task $task)
+    {
+        $dto = new TaskDto(...$request->validated());
+        $task->title = $dto->title;
+        $task->description = $dto->description;
+        $task->long_description = $dto->long_description;
+        $task->completed = $dto->completed;
+        $task->save();
+
+        return redirect()->route('tasks.show', $task)
+            ->with('success', 'Task was updated');
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy(Task $task)
+    {
+        $task->delete();
+
+        return redirect()
+            ->route('tasks.index')
+            ->with('success', 'Task "' . Str::limit($task->title, 50) . '" was deleted.');
+    }
+}

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\TaskController;
 use App\Models\Task;
 use Illuminate\Support\Facades\Route;
 
@@ -15,9 +16,13 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/', function () {
-    return view('index', ['tasks' => Task::all()]);
-})->name('tasks.index');
+    return redirect()->route('tasks.index');
+});
 
-Route::get('/tasks/{task}', function (Task $task) {
-    return view('task', ['task' => $task]);
-})->name('tasks.show');
+Route::resource('tasks', TaskController::class);
+
+Route::put('/tasks/{task}/toggle-complete', function (Task $task) {
+    $task->toggleComplete();
+
+    return redirect()->back();
+})->name('tasks.toggle-complete');
