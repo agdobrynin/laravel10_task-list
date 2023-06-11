@@ -18,7 +18,7 @@
         label {
             @apply block uppercase text-slate-700 mb-2
         }
-        input[type="text"], textarea {
+        input[type="text"], textarea, select {
             @apply shadow-sm appearance-none border rounded-md w-full py-2 px-3 text-slate-700 leading-tight focus:outline-none
         }
         .error {

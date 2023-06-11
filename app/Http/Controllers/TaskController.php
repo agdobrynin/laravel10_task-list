@@ -3,18 +3,27 @@
 namespace App\Http\Controllers;
 
 use App\Dto\TaskDto;
+use App\Dto\TaskFilterDto;
 use App\Models\Task;
 use Illuminate\Support\Str;
 use App\Http\Requests\TaskRequest;
+use App\Http\Requests\TaskFilterRequest;
 
 class TaskController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(TaskFilterRequest $request)
     {
-        return view('tasks.index', ['tasks' => Task::latest()->paginate()]);
+        $filterDto = new TaskFilterDto(...$request->validated());
+
+        $tasks = Task::latest()
+            ->taskFilter($filterDto)
+            ->paginate()
+            ->withQueryString();
+
+        return view('tasks.index', ['tasks' => $tasks, 'filterDto' => $filterDto]);
     }
 
     /**
@@ -60,6 +69,7 @@ class TaskController extends Controller
     public function update(TaskRequest $request, Task $task)
     {
         $dto = new TaskDto(...$request->validated());
+
         $task->title = $dto->title;
         $task->description = $dto->description;
         $task->long_description = $dto->long_description;

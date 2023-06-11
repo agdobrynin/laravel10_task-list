@@ -2,8 +2,10 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Dto\TaskFilterDto;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Task extends Model
 {
@@ -19,5 +21,13 @@ class Task extends Model
     {
         $this->completed = !$this->completed;
         $this->save();
+    }
+
+    public function scopeTaskFilter(Builder $query, TaskFilterDto $dto): void
+    {
+        $query->when(
+            $dto->completed !== null,
+            fn() => $query->where('completed', $dto->completed)
+        );
     }
 }
