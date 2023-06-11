@@ -13,7 +13,7 @@
             @apply rounded-md px-2 py-1 text-center font-medium text-slate-700 shadow-sm ring-1 ring-slate-700/10 hover:bg-slate-50
         }
         .link {
-            @apply font-medium text-gray-700 underline decoration-pink-500
+            @apply font-medium text-gray-700 underline decoration-indigo-500 underline-offset-2
         }
         label {
             @apply block uppercase text-slate-700 mb-2
