@@ -19,7 +19,7 @@
             @apply block uppercase text-slate-700 mb-2
         }
         input[type="text"], textarea {
-            @apply shadow-sm appearance-none border w-full py-2 px-3 text-slate-700 leading-tight focus:outline-none
+            @apply shadow-sm appearance-none border rounded-md w-full py-2 px-3 text-slate-700 leading-tight focus:outline-none
         }
         .error {
             @apply text-red-500 text-sm
