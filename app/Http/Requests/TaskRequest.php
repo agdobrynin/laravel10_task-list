@@ -17,7 +17,7 @@ class TaskRequest extends FormRequest
             'title' => 'required|min:5|max:255',
             'description' => 'required|min:10',
             'long_description' => 'nullable|min:20',
-            'completed' => 'nullable',
+            'completed' => 'boolean',
         ];
     }
 }

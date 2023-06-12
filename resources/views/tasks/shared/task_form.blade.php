@@ -31,7 +31,7 @@
     </div>
     <div class="mb-4">
         <label>
-            <input type="checkbox" name="completed" @if (old('completed', $task ?? false)) checked @endif> Completed task
+            <input type="checkbox" value="1" name="completed" @if (old('completed', $task ?? false)) checked @endif> Completed task
         </label>
     </div>
     <button type="submit" class="btn w-full">
