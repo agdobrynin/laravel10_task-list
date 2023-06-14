@@ -1,8 +1,4 @@
-@extends('layout')
-
-@section('title', 'Details for task: ' . Str::limit($task->title, 20))
-
-@section('content')
+<x-layout :pageTitle="'Details for task: ' . Str::limit($task->title, 20)">
     <h1 class="text-2xl mb-4">{{ $task->title }}</h1>
     <div class="mb-4">
         @if ($task->completed)
@@ -16,8 +12,8 @@
 
     <div class="pb-4">
         <a href="{{ route('tasks.edit', $task) }}" class="mr-2 btn">Edit task</a>
-        <span class="mr-2">@include('tasks.shared.task_delete')</span>
-        <span class="mr-2">@include('tasks.shared.task_toggle_complete')</span>
+        <x-task.action_button.delete :$task/>
+        <x-task.action_button.toggle_complete :$task/>
     </div>
 
 
@@ -36,4 +32,4 @@
             ✏ {{ $task->updated_at->diffForHumans() }}
         @endif
     </div>
-@endsection
+</x-layout>

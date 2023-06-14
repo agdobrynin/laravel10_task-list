@@ -1,3 +1,6 @@
+@props([
+    'task'
+])
 <form action="{{ route('tasks.toggle-complete', $task) }}" method="post" style="display: inline">
     @csrf
     @method('put')

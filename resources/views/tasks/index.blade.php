@@ -1,8 +1,4 @@
-@extends('layout')
-
-@section('title', 'All tasks list')
-
-@section('content')
+<x-layout pageTitle="All tasks list">
     <form action="{{ route('tasks.index') }}" class="mb-4 grid grid-flow-col auto-cols-max gap-4 flex items-end">
         <div>
             <label for="completed">Task status</label>
@@ -32,4 +28,4 @@
             {{ $tasks->links() }}
         </nav>
     @endif
-@endsection
+</x-layout>

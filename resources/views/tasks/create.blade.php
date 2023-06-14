@@ -1,9 +1,5 @@
-@extends('layout')
-
-@section('title', 'Add new task')
-
-@section('content')
+<x-layout pageTitle="Add new task">
     <h1 class="text-2xl pb-4">New Task</h1>
 
-    @include('tasks.shared.task_form')
-@endsection
+    <x-task.form />
+</x-layout>

@@ -1,3 +1,6 @@
+@props([
+    'task'
+])
 <form action="{{ route('tasks.destroy', $task) }}" method="post" style="display: inline">
     @csrf
     @method('delete')
