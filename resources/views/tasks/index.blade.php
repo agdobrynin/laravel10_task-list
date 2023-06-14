@@ -1,12 +1,11 @@
 <x-layout pageTitle="All tasks list">
     <form action="{{ route('tasks.index') }}" class="mb-4 grid grid-flow-col auto-cols-max gap-4 flex items-end">
         <div>
-            <label for="completed">Task status</label>
-            <select name="completed" id="completed">
-                <option value="">All</option>
-                <option value="0" @if ($filterDto->completed === false) selected @endif>Uncompleted</option>
-                <option value="1" @if ($filterDto->completed === true) selected @endif>Completed</option>
-            </select>
+            <x-ui.select
+                title="Task status"
+                name="completed"
+                :options="['' => 'All', '0' => 'Uncompleted', '1' => 'Completed']"
+                :value="$filterDto->completed === null ? '' : (int)$filterDto->completed"/>
         </div>
         <div>
             <button type="submit" class="btn"><span class="font-light">Applay filter</span></button>
