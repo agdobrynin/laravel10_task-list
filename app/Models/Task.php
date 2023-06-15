@@ -44,7 +44,7 @@ class Task extends Model
         $query->whereBelongsTo($user);
     }
 
-    public function scopeWhereUser(Builder $query, string $user): void
+    public function scopeWhereUserName(Builder $query, string $user): void
     {
         $query->with('user')
             ->whereHas(

@@ -26,8 +26,14 @@ class TaskController extends Controller
         $tasks = Task::latest()
             ->taskFilter($filterDto)
             ->with('user')
-            ->when(!$request->user()->is_admin, fn($query) => $query->byUser($request->user()))
-            ->when($filterDto->user, fn($query) => $query->whereUser($filterDto->user))
+            ->when(
+                !$request->user()->is_admin,
+                fn($query) => $query->byUser($request->user())
+            )
+            ->when(
+                $filterDto->user,
+                fn($query) => $query->whereUserName($filterDto->user)
+            )
             ->paginate()
             ->onEachSide(1)
             ->withQueryString();

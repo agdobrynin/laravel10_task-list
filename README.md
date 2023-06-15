@@ -2,7 +2,7 @@
 
 Демо проект - "Список задач".
 
-- 🐘 Php 8.2 + Laravel 10
+- 🐘 Php 8.2 + Laravel 10 (Авторизация и регистрация Laravel Fortify)
 - 🦖 MariaDb
 - 🐳 Docker (Docker compose) + Laravel Sail
 
