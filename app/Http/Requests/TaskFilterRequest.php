@@ -23,7 +23,7 @@ class TaskFilterRequest extends FormRequest
     {
         return [
             'completed' => 'nullable|boolean',
-            'user' => 'nullable|string|min:5', 
+            'user' => 'nullable|string|min:4',
         ];
     }
 }
