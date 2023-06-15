@@ -7,9 +7,11 @@
                 :options="['' => 'All', '0' => 'Uncompleted', '1' => 'Completed']"
                 :value="$filterDto->completed === null ? '' : (int)$filterDto->completed"/>
         </div>
-        <div>
-            <x-ui.input title="User name (part name)" name="user" value="{{ old('name', $filterDto->user) }}"/>
-        </div>
+        @if(Auth::user()->is_admin)
+            <div>
+                <x-ui.input title="User name (part name)" name="user" value="{{ old('name', $filterDto->user) }}"/>
+            </div>
+        @endif
         <div>
             <button type="submit" class="btn"><span class="font-light">Applay filter</span></button>
         </div>
