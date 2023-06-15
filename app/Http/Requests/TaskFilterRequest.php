@@ -22,7 +22,8 @@ class TaskFilterRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'completed' => 'nullable|boolean'
+            'completed' => 'nullable|boolean',
+            'user' => 'nullable|string|min:5', 
         ];
     }
 }

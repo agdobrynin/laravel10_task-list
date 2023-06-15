@@ -8,6 +8,9 @@
                 :value="$filterDto->completed === null ? '' : (int)$filterDto->completed"/>
         </div>
         <div>
+            <x-ui.input title="User name (part name)" name="user" value="{{ old('name', $filterDto->user) }}"/>
+        </div>
+        <div>
             <button type="submit" class="btn"><span class="font-light">Applay filter</span></button>
         </div>
     </form>
@@ -15,7 +18,10 @@
         @forelse ($tasks as $task)
             <a href="{{ route('tasks.show', $task) }}" class="border-gray-400 border rounded-md hover:bg-gray-200 p-2">
                 <div @class(['line-through' => $task->completed])>{{ $task->title }}</div>
-                <div class="no-underline">{{ $task->created_at->diffForHumans() }}</div>
+                <div class="no-underline mt-4 text-xs text-gray-400">
+                    Created {{ $task->created_at->diffForHumans() }}
+                    by {{ $task->user->name }}
+                </div>
             </a>
         @empty
             <div>No task</div>

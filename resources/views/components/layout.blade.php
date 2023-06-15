@@ -5,7 +5,13 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>@isset($pageTitle) {{ $pageTitle }} @else Task list App @endisset</title>
+    <title>
+        @isset($pageTitle)
+            {{ $pageTitle }}
+        @else
+            Task list App
+        @endisset
+    </title>
 
     <script src="https://cdn.tailwindcss.com"></script>
     {{-- blade-formatter-disable --}}
@@ -19,7 +25,7 @@
         label {
             @apply block uppercase text-slate-700 mb-2
         }
-        input[type="text"], textarea, select {
+        input[type="text"], input[type="password"], textarea, select {
             @apply shadow-sm appearance-none border rounded-md w-full py-2 px-3 text-slate-700 leading-tight focus:outline-none
         }
         .error {
@@ -31,12 +37,26 @@
 
 <body class="container mx-auto mt-10 mb-10 max-w-2xl">
     @if (session()->has('success'))
-        <x-alert.success :message="session('success')"/>
+        <x-alert.success :message="session('success')" />
     @endif
-    <nav class="mb-4 bg-gray-200 font-medium p-3 rounded-md">
-        <a href="{{ route('tasks.index') }}" class="link">All tasks</a>
-        |
-        <a href="{{ route('tasks.create') }}" class="link">Add task</a>
+    <nav class="mb-4 bg-gray-200 font-medium p-3 rounded-md md:flex justify-between">
+        <div>
+            <a href="{{ route('home') }}" class="link">Main page</a>
+            |
+            <a href="{{ route('tasks.index') }}" class="link">Tasks</a>
+            |
+            <a href="{{ route('tasks.create') }}" class="link">Add task</a>
+        </div>
+
+        <div>
+            @if (Auth::user())
+                <x-auth.logout />
+            @else
+                <a href="{{ route('register') }}" class="link">Sign up</a>
+                |
+                <a href="{{ route('login') }}" class="link">Sign in</a>
+            @endif
+        </div>
     </nav>
     <main>
         {{ $slot }}

@@ -1,7 +1,7 @@
 @props([
     'title',
     'name',
-    'value',
+    'value' => '',
     'type' => 'text',
     'id' => \Illuminate\Support\Str::uuid(),
 ])

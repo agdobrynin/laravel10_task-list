@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\TaskController;
+use App\Http\Controllers\TaskToggleCompleteController;
 use App\Models\Task;
 use Illuminate\Support\Facades\Route;
 
@@ -16,13 +17,13 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/', function () {
-    return redirect()->route('tasks.index');
+    return view('home');
+})->name('home');
+
+
+Route::middleware('auth')->group(function () {
+    Route::resource('tasks', TaskController::class);
+
+    Route::put('/tasks/{task}/toggle-complete', TaskToggleCompleteController::class)
+        ->name('tasks.toggle-complete');
 });
-
-Route::resource('tasks', TaskController::class);
-
-Route::put('/tasks/{task}/toggle-complete', function (Task $task) {
-    $task->toggleComplete();
-
-    return redirect()->back();
-})->name('tasks.toggle-complete');

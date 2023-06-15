@@ -27,9 +27,10 @@
     @endif
 
     <div class="mb-4 text-sm text-slate-500">
-        ➕ {{ $task->created_at->diffForHumans() }}
+        Changed ➕ {{ $task->created_at->diffForHumans() }}
         @if ($task->created_at != $task->updated_at)
             ✏ {{ $task->updated_at->diffForHumans() }}
         @endif
+        by {{ $task->user->name }}
     </div>
 </x-layout>

@@ -11,6 +11,11 @@ use App\Http\Requests\TaskFilterRequest;
 
 class TaskController extends Controller
 {
+    public function __construct()
+    {
+        $this->authorizeResource(Task::class, 'task');
+    }
+
     /**
      * Display a listing of the resource.
      */
@@ -20,7 +25,11 @@ class TaskController extends Controller
 
         $tasks = Task::latest()
             ->taskFilter($filterDto)
+            ->with('user')
+            ->when(!$request->user()->is_admin, fn($query) => $query->byUser($request->user()))
+            ->when($filterDto->user, fn($query) => $query->whereUser($filterDto->user))
             ->paginate()
+            ->onEachSide(1)
             ->withQueryString();
 
         return view('tasks.index', ['tasks' => $tasks, 'filterDto' => $filterDto]);
@@ -41,7 +50,9 @@ class TaskController extends Controller
     {
         $dto = new TaskDto(...$request->validated());
 
-        $task = Task::create((array)$dto);
+        $task = Task::make((array)$dto);
+        $task->user()->associate($request->user());
+        $task->save();
 
         return redirect()->route('tasks.show', $task)
             ->with('success', 'New task was created');
@@ -52,6 +63,8 @@ class TaskController extends Controller
      */
     public function show(Task $task)
     {
+        $task->loadMissing('user');
+
         return view('tasks.show', ['task' => $task]);
     }
 

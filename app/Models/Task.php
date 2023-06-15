@@ -6,6 +6,7 @@ use App\Dto\TaskFilterDto;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Task extends Model
 {
@@ -15,7 +16,14 @@ class Task extends Model
         'title',
         'description',
         'long_description',
+        'user_id',
     ];
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
+
 
     public function toggleComplete(): void
     {
@@ -27,7 +35,21 @@ class Task extends Model
     {
         $query->when(
             $dto->completed !== null,
-            fn() => $query->where('completed', $dto->completed)
+            fn () => $query->where('completed', $dto->completed)
         );
+    }
+
+    public function scopeByUser(Builder $query, User $user): void
+    {
+        $query->whereBelongsTo($user);
+    }
+
+    public function scopeWhereUser(Builder $query, string $user): void
+    {
+        $query->with('user')
+            ->whereHas(
+                'user',
+                fn (Builder $q) => $q->where('name', 'like', "%{$user}%")
+            );
     }
 }

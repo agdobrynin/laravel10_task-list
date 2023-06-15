@@ -15,8 +15,12 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        User::factory(7)->create();
-        User::factory(3)->unverified()->create();
-        Task::factory(20)->create();
+        User::factory()->isAdmin()->create([
+            'email' => 'admin@example.net',
+            'name' => 'Site Administrator',
+        ]);
+
+        User::factory(7)->has(Task::factory(rand(18, 25)))->create();
+        User::factory(3)->has(Task::factory(rand(18, 25)))->unverified()->create();
     }
 }
