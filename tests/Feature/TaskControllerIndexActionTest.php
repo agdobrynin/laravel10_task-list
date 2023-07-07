@@ -33,7 +33,9 @@ class TaskControllerIndexActionTest extends TestCase
         $this->actingAs($user)->get('/tasks')
             ->assertStatus(200)
             ->assertSee(Task::latest()->first()->title)
-            ->assertDontSee(Task::latest()->get()->last()->title);
+            ->assertDontSee(Task::latest()->get()->last()->title)
+            // Paginate element
+            ->assertSee('<nav role="navigation" aria-label="Pagination Navigation"', false);
     }
 
     public function test_show_task_list_by_user_with_paginate(): void
