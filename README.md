@@ -74,6 +74,12 @@ docker run --rm -u "$(id -u):$(id -g)" \
     ./vendor/bin/sail artisan migrate --seed
     ```
 
+### Запуск тестов
+
+```shell
+./vendor/bin/sail test
+```
+
 ### Доступные сайты в dev окружении
 
 |                Host                | Назначение                                                   |
