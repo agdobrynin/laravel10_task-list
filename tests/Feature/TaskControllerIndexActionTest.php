@@ -83,7 +83,7 @@ class TaskControllerIndexActionTest extends TestCase
         $user1 = User::factory()->has(Task::factory(3))->create();
 
         $this->actingAs($admin)->get('/tasks?' . http_build_query(['user' => 'sh']))
-            ->assertSessionHasErrors(['user'], 'min')
+            ->assertSessionHasErrors(['user' => 'The user field must be at least 4 characters.'])
             ->assertRedirect();
     }
 

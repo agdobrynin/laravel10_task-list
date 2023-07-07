@@ -36,8 +36,8 @@ class UserFactory extends Factory
         ]);
     }
 
-    public function isAdmin(): static
+    public function isAdmin(bool $is = true): static
     {
-        return $this->state(['is_admin' => true]);
+        return $this->state(['is_admin' => $is]);
     }
 }
