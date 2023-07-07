@@ -77,6 +77,16 @@ class TaskControllerIndexActionTest extends TestCase
             ->assertDontSee($user1->tasks()->pluck('title')->toArray());
     }
 
+    public function test_show_task_list_by_user_with_filter_for_admin_validate_error(): void
+    {
+        $admin = User::factory()->isAdmin()->create();
+        $user1 = User::factory()->has(Task::factory(3))->create();
+
+        $this->actingAs($admin)->get('/tasks?' . http_build_query(['user' => 'sh']))
+            ->assertSessionHasErrors(['user'], 'min')
+            ->assertRedirect();
+    }
+
     public function test_show_task_list_by_user_with_filter_by_user_name_not_available(): void
     {
         $user = User::factory()->has(Task::factory(5))->create();
