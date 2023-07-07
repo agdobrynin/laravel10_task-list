@@ -39,7 +39,7 @@ class MainPageTest extends TestCase
             ], false)
             ->assertSee([
                 '<form action="' . $appUrl . '/logout" method="post"',
-                '>Sign out as ' . $user->name . '</button>',
+                '>Sign out as ' . e($user->name) . '</button>',
                 '<a href="' . $appUrl . '/tasks" class="link">Tasks</a>',
                 '<a href="' . $appUrl . '/tasks/create" class="link">Add task</a>',
             ], false);
