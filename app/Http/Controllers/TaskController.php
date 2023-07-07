@@ -31,7 +31,7 @@ class TaskController extends Controller
                 fn($query) => $query->byUser($request->user())
             )
             ->when(
-                $filterDto->user,
+                $request->user()->is_admin && $filterDto->user,
                 fn($query) => $query->whereUserName($filterDto->user)
             )
             ->paginate()
