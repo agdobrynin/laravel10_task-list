@@ -80,7 +80,7 @@ class TaskControllerIndexActionTest extends TestCase
     public function test_show_task_list_by_user_with_filter_for_admin_validate_error(): void
     {
         $admin = User::factory()->isAdmin()->create();
-        $user1 = User::factory()->has(Task::factory(3))->create();
+        User::factory()->has(Task::factory(3))->create();
 
         $this->actingAs($admin)->get('/tasks?' . http_build_query(['user' => 'sh']))
             ->assertSessionHasErrors(['user' => 'The user field must be at least 4 characters.'])
