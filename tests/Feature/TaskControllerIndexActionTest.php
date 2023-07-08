@@ -21,7 +21,7 @@ class TaskControllerIndexActionTest extends TestCase
     {
         $this->actingAs(User::factory()->create())->get('/tasks')
             ->assertStatus(200)
-            ->assertSee('No task');
+            ->assertSeeText('No task');
     }
 
     public function test_show_task_list_by_user(): void
