@@ -16,7 +16,7 @@ class TaskToggleCompleteTest extends TestCase
      * @dataProvider data
      */
     public function test_toggle_task_complete(
-        ?User   $user,
+        ?User   $actingAsUser,
         Task    $task,
         bool    $isCompeteBefore,
         bool    $isCompeteAfter,
@@ -27,8 +27,8 @@ class TaskToggleCompleteTest extends TestCase
         $task->save();
         $this->assertEquals($isCompeteBefore, $task->completed);
 
-        if ($user) {
-            Sanctum::actingAs($user);
+        if ($actingAsUser) {
+            Sanctum::actingAs($actingAsUser);
         }
 
         $response = $this->put('/tasks/' . $task->id . '/toggle-complete')
@@ -46,26 +46,26 @@ class TaskToggleCompleteTest extends TestCase
         $this->refreshApplication();
         $this->refreshDatabase();
 
-        $user = User::factory()->isAdmin(false)->create();
+        $actingAsUser = User::factory()->isAdmin(false)->create();
 
         yield 'is complete before false' => [
-            $user,
-            Task::factory(['completed' => false])->for($user)->make(),
+            $actingAsUser,
+            Task::factory(['completed' => false])->for($actingAsUser)->make(),
             false,
             true,
             302,
         ];
 
         yield 'is complete before true' => [
-            $user,
-            Task::factory(['completed' => true])->for($user)->make(),
+            $actingAsUser,
+            Task::factory(['completed' => true])->for($actingAsUser)->make(),
             true,
             false,
             302,
         ];
 
         yield 'is complete fail for not owner task' => [
-            $user,
+            $actingAsUser,
             Task::factory(['completed' => true])->for(User::factory()->create())->make(),
             true,
             true,
@@ -74,7 +74,7 @@ class TaskToggleCompleteTest extends TestCase
 
         yield 'is complete fail for anonymous user' => [
             null,
-            Task::factory(['completed' => false])->for($user)->make(),
+            Task::factory(['completed' => false])->for($actingAsUser)->make(),
             false,
             false,
             302,
@@ -85,7 +85,7 @@ class TaskToggleCompleteTest extends TestCase
 
         yield 'is complete success for admin' => [
             $admin,
-            Task::factory(['completed' => false])->for($user)->make(),
+            Task::factory(['completed' => false])->for($actingAsUser)->make(),
             false,
             true,
             302,
