@@ -5,100 +5,91 @@ namespace Tests\Feature;
 use App\Models\Task;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
 class TaskToggleCompleteTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_toggle_task_complete_from_task_page_success(): void
+    /**
+     * @dataProvider data
+     */
+    public function test_toggle_task_complete(
+        ?User   $user,
+        Task    $task,
+        bool    $isCompeteBefore,
+        bool    $isCompeteAfter,
+        int     $status,
+        ?string $redirectToUrl = null,
+    ): void
     {
-        /** @var User $user */
-        $user = User::factory()->has(Task::factory()->state(['completed' => false]))
-            ->create();
-        /** @var Task $task */
-        $task = $user->tasks()->first();
+        $task->save();
+        $this->assertEquals($isCompeteBefore, $task->completed);
 
-        $this->assertEquals(false, $task->completed);
+        if ($user) {
+            Sanctum::actingAs($user);
+        }
 
-        $this->actingAs($user)
-            ->put('/tasks/' . $task->id . '/toggle-complete')
-            ->assertRedirect();
+        $response = $this->put('/tasks/' . $task->id . '/toggle-complete')
+            ->assertStatus($status);
 
-        $this->assertEquals(true, Task::find($task->id)->completed);
+        if ($redirectToUrl) {
+            $response->assertRedirect($redirectToUrl);
+        }
+
+        $this->assertEquals($isCompeteAfter, Task::find($task->id)->completed);
     }
 
-    public function test_toggle_task_uncompleted_task_page_success(): void
+    public function data(): \Generator
     {
-        /** @var User $user */
-        $user = User::factory()->has(Task::factory()->state(['completed' => true]))
-            ->create();
-        /** @var Task $task */
-        $task = $user->tasks()->first();
+        $this->refreshApplication();
+        $this->refreshDatabase();
 
-        $this->assertEquals(true, $task->completed);
+        $user = User::factory()->isAdmin(false)->create();
 
-        $this->actingAs($user)
-            ->put('/tasks/' . $task->id . '/toggle-complete')
-            ->assertRedirect();
+        yield 'is complete before false' => [
+            $user,
+            Task::factory(['completed' => false])->for($user)->make(),
+            false,
+            true,
+            302,
+        ];
 
-        $this->assertEquals(false, Task::find($task->id)->completed);
-    }
+        yield 'is complete before true' => [
+            $user,
+            Task::factory(['completed' => true])->for($user)->make(),
+            true,
+            false,
+            302,
+        ];
 
-    public function test_toggle_task_completed_task_page_by_unauthenticated_user(): void
-    {
-        /** @var User $user */
-        $user = User::factory()->has(Task::factory()->state(['completed' => false]))
-            ->create();
-        /** @var Task $task */
-        $task = $user->tasks()->first();
+        yield 'is complete fail for not owner task' => [
+            $user,
+            Task::factory(['completed' => true])->for(User::factory()->create())->make(),
+            true,
+            true,
+            403,
+        ];
 
-        $this->assertEquals(false, $task->completed);
+        yield 'is complete fail for anonymous user' => [
+            null,
+            Task::factory(['completed' => false])->for($user)->make(),
+            false,
+            false,
+            302,
+            '/login',
+        ];
 
-        $this->put('/tasks/' . $task->id . '/toggle-complete')
-            ->assertStatus(302)
-            ->assertRedirect('/login');
+        $admin = User::factory()->isAdmin()->create();
 
-        $this->assertEquals(false, Task::find($task->id)->completed);
-    }
-
-    public function test_toggle_task_completed_task_page_by_not_owner(): void
-    {
-        /** @var User $user */
-        $user = User::factory()->has(Task::factory()->state(['completed' => false]))
-            ->create();
-        /** @var Task $task */
-        $task = $user->tasks()->first();
-
-        $this->assertEquals(false, $task->completed);
-
-        $userActing = User::factory()->create();
-
-        $this->actingAs($userActing)
-            ->put('/tasks/' . $task->id . '/toggle-complete')
-            ->assertForbidden()
-            ->assertSeeText('You are not owner');
-
-        $this->assertEquals(false, Task::find($task->id)->completed);
-    }
-
-    public function test_toggle_task_completed_task_page_by_admin_is_success(): void
-    {
-        /** @var User $user */
-        $user = User::factory()->has(Task::factory()->state(['completed' => false]))
-            ->create();
-        /** @var Task $task */
-        $task = $user->tasks()->first();
-
-        $this->assertEquals(false, $task->completed);
-
-        $userActing = User::factory()->isAdmin()->create();
-
-        $this->actingAs($userActing)
-            ->put('/tasks/' . $task->id . '/toggle-complete')
-            ->assertStatus(302)
-            ->assertRedirect('/');
-
-        $this->assertEquals(true, Task::find($task->id)->completed);
+        yield 'is complete success for admin' => [
+            $admin,
+            Task::factory(['completed' => false])->for($user)->make(),
+            false,
+            true,
+            302,
+            '/',
+        ];
     }
 }
