@@ -24,43 +24,40 @@ class SignUpTest extends TestCase
         }
     }
 
-    public function regUser(): array
+    public static function regUser(): \Generator
     {
-        return [
+        yield 'required fields' => [
+            ['email', 'name', 'password'],
             [
-                // Required field
-                ['email', 'name', 'password'],
-                [
-                    'email' => 'The email field is required.',
-                    'name' => 'The name field is required.',
-                    'password' => 'The password field is required.',
-                ],
+                'email' => 'The email field is required.',
+                'name' => 'The name field is required.',
+                'password' => 'The password field is required.',
             ],
+        ];
+
+        yield 'valid email, and min password length' => [
+            ['email' => 'a', 'name' => 'a', 'password' => 'a'],
             [
-                // Valid email, and min password length
-                ['email' => 'a', 'name' => 'a', 'password' => 'a'],
-                [
-                    'email' => 'The email field must be a valid email address.',
-                    'password' => 'The password must be at least 8 characters.',
-                ],
-                ['name']
+                'email' => 'The email field must be a valid email address.',
+                'password' => 'The password must be at least 8 characters.',
             ],
+            ['name']
+        ];
+
+        yield 'password not matched' => [
+            ['email' => 'a@a.com', 'name' => 'a', 'password' => '12345678'],
             [
-                // password match
-                ['email' => 'a@a.com', 'name' => 'a', 'password' => '12345678'],
-                [
-                    'password' => 'The password field confirmation does not match.',
-                ],
-                ['email', 'name']
+                'password' => 'The password field confirmation does not match.',
             ],
+            ['email', 'name']
+        ];
+
+        yield 'password not matched 2' => [
+            ['email' => 'a@a.com', 'name' => 'a', 'password' => '12345678', 'password_confirmation' => '87654321'],
             [
-                // password match 2
-                ['email' => 'a@a.com', 'name' => 'a', 'password' => '12345678', 'password_confirmation' => '87654321'],
-                [
-                    'password' => 'The password field confirmation does not match.',
-                ],
-                ['email', 'name']
+                'password' => 'The password field confirmation does not match.',
             ],
+            ['email', 'name']
         ];
     }
 
