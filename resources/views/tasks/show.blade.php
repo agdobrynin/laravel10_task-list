@@ -20,7 +20,7 @@
     <p class="mb-4 border-solid border-2 border-sky-200 p-4 rounded-md">
         {{ $task->description }}
     </p>
-    
+
     @if ($task->long_description)
         <p class="mb-4 text-gray-700 font-light border-solid border-2 border-sky-200 p-4 rounded-md"> {{ $task->long_description }}
         </p>

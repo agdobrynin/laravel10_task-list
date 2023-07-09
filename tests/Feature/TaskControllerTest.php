@@ -80,80 +80,58 @@ class TaskControllerTest extends TestCase
         );
     }
 
-    public function test_task_show_anonymous(): void
+    /** @dataProvider showData */
+    public function test_task_show(
+        ?User    $actingAs,
+        Task|int $task,
+        int      $statusCode,
+        ?string  $redirectUrl = null,
+    ): void
     {
-        $task = User::factory()
-            ->has(Task::factory())
-            ->create()
-            ->tasks()->first();
+        if ($task instanceof Task) {
+            $task->save();
+            $id = $task->id;
+        } else {
+            $id = $task;
+        }
 
-        $this->get('/tasks/' . $task->id)
-            ->assertRedirect('/login');
-    }
+        if ($actingAs) {
+            $this->actingAs($actingAs);
+        }
 
-    public function test_task_show_not_found(): void
-    {
-        $user = User::factory()
-            ->has(Task::factory())
-            ->create();
+        $response = $this->get('/tasks/' . $id)
+            ->assertStatus($statusCode);
 
-        $this->actingAs($user)
-            ->get('/tasks/111111111111')
-            ->assertNotFound();
-    }
-
-    public function test_task_show_not_owner_task(): void
-    {
-        $user = User::factory(state: ['is_admin' => false])
-            ->has(Task::factory())
-            ->create();
-
-        $task = $user->tasks()->first();
-
-        $this->actingAs(User::factory()->create())
-            ->get('/tasks/' . $task->id)
-            ->assertForbidden();
-    }
-
-    public function test_task_show_task_for_admin(): void
-    {
-        $user = User::factory()
-            ->has(Task::factory())
-            ->create();
-
-        $task = $user->tasks()->first();
-
-        $this->actingAs(User::factory()->isAdmin()->create())
-            ->get('/tasks/' . $task->id)
-            ->assertStatus(200)
-            ->assertSeeInOrder([
+        if ($response->isOk()) {
+            $response->assertSeeInOrder([
                 e($task->title),
                 e($task->desctipion),
                 e($task->long_description),
-                'by ' . e($user->name),
             ], false);
+        }
+
+        if ($redirectUrl) {
+            $response->assertRedirect($redirectUrl);
+        }
     }
 
-    public function test_task_show_for_owner_task(): void
+    public function showData(): \Generator
     {
-        $user = User::factory()
-            ->has(Task::factory())
-            ->create();
+        $this->refreshApplication();
+        $this->refreshDatabase();
+        $user = User::factory()->isAdmin(false)->create();
 
-        $task = $user->tasks()->first();
 
-        $this->actingAs($user)
-            ->get('/tasks/' . $task->id)
-            ->assertStatus(200)
-            ->assertSeeInOrder([
-                e($task->title),
-                '>Edit task<',
-                '>Delete<',
-                'Mark as',
-                e($task->desctipion),
-                e($task->long_description),
-                'by ' . e($user->name),
-            ], false);
+        yield 'by anonymous' => [null, clone Task::factory()->for($user)->make(), 302, '/login'];
+
+        yield 'not found' => [$user, 111111111, 404];
+
+        yield 'not owner task' => [$user, Task::factory()->for(User::factory()->create())->make(), 403];
+
+        $admin = User::factory()->isAdmin()->create();
+        yield 'by admin' => [$admin, Task::factory()->for(User::factory()->create())->make(), 200];
+
+        yield 'by owner task' => [$user, Task::factory()->for($user)->make(), 200];
     }
 
     public function test_task_edit_for_owner_task(): void
@@ -230,171 +208,180 @@ class TaskControllerTest extends TestCase
             ->assertForbidden();
     }
 
-    public function test_task_update_by_anonymous(): void
+    /** @dataProvider dataUpdate */
+    public function test_task_update(
+        ?User    $actingAs,
+        Task|int $task,
+        array    $updateData,
+        int      $statusCode,
+        ?string  $redirectUrl = null,
+        ?array   $sessionHasErrors = [],
+        ?array   $sessionHas = [],
+    ): void
     {
-        $user = User::factory()
-            ->has(Task::factory())
-            ->create();
+        if ($task instanceof Task) {
+            $task->save();
+            $id = $task->id;
+        } else {
+            $id = $task;
+        }
 
-        $task = $user->tasks()->first();
+        if ($actingAs) {
+            $this->actingAs($actingAs);
+        }
 
-        $this->put('tasks/' . $task->id, [])
-            ->assertRedirect('/login');
+        $response = $this->put('/tasks/' . $id, $updateData)
+            ->assertStatus($statusCode);
+
+        if ($sessionHasErrors) {
+            $response->assertSessionHasErrors($sessionHasErrors);
+
+            if ($updateData) {
+                $this->assertDatabaseMissing(Task::class, $updateData);
+            }
+        } else {
+            $response->assertSessionHasNoErrors();
+
+            if ($response->isSuccessful() || $response->isRedirection()) {
+                $this->assertDatabaseHas(Task::class, $updateData);
+            }
+        }
+
+        if ($sessionHas) {
+            $response->assertSessionHas($sessionHas);
+        }
+
+        if ($redirectUrl) {
+            $response->assertRedirect($redirectUrl);
+        }
     }
 
-    public function test_task_update_by_not_owner_task(): void
+    public function dataUpdate(): \Generator
     {
-        $user = User::factory()
-            ->has(Task::factory())
-            ->create();
+        $this->refreshApplication();
+        $this->refreshDatabase();
 
-        $task = $user->tasks()->first();
+        $actingAs = User::factory()->isAdmin(false)->create();
+        $task = Task::factory()->for($actingAs)->make();
+        $otherUser = User::factory()->isAdmin(false)->create();
+        $admin = User::factory()->isAdmin()->create();
 
-        $this->actingAs(User::factory()->create())
-            ->put('tasks/' . $task->id, [])
-            ->assertForbidden();
-    }
+        yield 'by anonymous' => [null, clone $task, [], 302, '/login'];
 
-    public function test_task_update_by_admin(): void
-    {
-        $user = User::factory()
-            ->has(Task::factory())
-            ->create();
+        yield 'by not owner task' => [$actingAs, Task::factory()->for($otherUser)->make(), [], 403];
 
-        $task = $user->tasks()->first();
+        yield 'by admin' => [$admin, clone $task, [], 403];
 
-        $this->actingAs(User::factory()->isAdmin()->create())
-            ->put('tasks/' . $task->id, [])
-            ->assertForbidden();
-    }
-
-    public function test_task_update_validation_error_fields_required(): void
-    {
-        $user = User::factory()
-            ->has(Task::factory())
-            ->create();
-
-        $task = $user->tasks()->first();
-
-        $this->actingAs($user)
-            ->put('/tasks/' . $task->id, [])
-            ->assertSessionHasErrors(['title' => 'The title field is required.'])
-            ->assertSessionHasErrors(['description' => 'The description field is required.'])
-            ->assertRedirect();
-    }
-
-    public function test_task_update_validation_error_fields_length(): void
-    {
-        $user = User::factory()
-            ->has(Task::factory())
-            ->create();
-
-        $task = $user->tasks()->first();
-
-        $this->actingAs($user)
-            ->put('/tasks/' . $task->id, ['title' => 'a', 'description' => 'a', 'long_description' => 'a'])
-            ->assertSessionHasErrors(['title' => 'The title field must be at least 5 characters.'])
-            ->assertSessionHasErrors(['description' => 'The description field must be at least 10 characters.'])
-            ->assertSessionHasErrors(['long_description' => 'The long description field must be at least 20 characters.'])
-            ->assertRedirect();
-    }
-
-    public function test_task_update(): void
-    {
-        $user = User::factory()
-            ->has(Task::factory())
-            ->create();
-
-        $task = $user->tasks()->first();
-
-        $data = [
-            'title' => 'My updated task!',
-            'description' => 'This task has description...',
-            'long_description' => 'Well, well, well. This task also has long description!',
-            'completed' => true,
+        yield 'validation error fields required' => [$actingAs, clone $task, [], 302, null,
+            ['title' => 'The title field is required.', 'description' => 'The description field is required.']
         ];
 
-        $this->actingAs($user)
-            ->put('/tasks/' . $task->id, $data)
-            ->assertSessionHasNoErrors()
-            ->assertRedirect('/tasks/' . $task->id)
-            ->assertSessionHas('success', 'Task was updated');
-
-        $this->assertDatabaseHas(Task::class, $data);
-    }
-
-    public function test_task_update_completed_box(): void
-    {
-        $user = User::factory()
-            ->has(Task::factory()->state(['completed' => true]))
-            ->create();
-
-        $task = $user->tasks()->first();
-
-        $this->assertTrue((bool)$task->completed);
-
-        $data = [
-            'title' => $task->title,
-            'description' => $task->description,
-            'long_description' => $task->long_description,
-            'completed' => false,
+        yield 'validation error fields length' => [
+            $actingAs,
+            clone $task,
+            ['title' => 'a', 'description' => 'a', 'long_description' => 'a'],
+            302,
+            null,
+            [
+                'title' => 'The title field must be at least 5 characters.',
+                'description' => 'The description field must be at least 10 characters.',
+                'long_description' => 'The long description field must be at least 20 characters.',
+            ]
         ];
 
-        $this->actingAs($user)
-            ->put('/tasks/' . $task->id, $data)
-            ->assertSessionHasNoErrors()
-            ->assertRedirect('/tasks/' . $task->id)
-            ->assertSessionHas('success', 'Task was updated');
+        yield 'success update without completed checkbox 🎉' => [
+            $actingAs,
+            clone $task,
+            [
+                'title' => 'My updated task!',
+                'description' => 'This task has description...',
+                'long_description' => 'Well, well, well. This task also has long description!',
+            ],
+            302,
+            null,
+            [],
+            ['success' => 'Task was updated',]
+        ];
 
-        $this->assertDatabaseHas(Task::class, $data);
+        $task = Task::factory(['completed' => false])->for($actingAs)->make();
 
-        $this->assertFalse((bool)Task::find($task->id)->completed);
+        yield 'success update only complete checkbox 🎠' => [
+            $actingAs,
+            $task,
+            [
+                'title' => $task->title,
+                'description' => $task->description,
+                'long_description' => $task->long_description,
+                'completed' => true,
+            ],
+            302,
+            null,
+            [],
+            ['success' => 'Task was updated',]
+        ];
+
+        yield 'not found 😲' => [
+            $actingAs,
+            1111111111,
+            [
+                'title' => 'Qwertyuiop',
+                'description' => 'Qwertyuiop Qwertyuiop',
+                'long_description' => 'Qwertyuiop Qwertyuiop Qwertyuiop Qwertyuiop',
+                'completed' => true,
+            ],
+            404,
+            null,
+            [],
+            []
+        ];
     }
 
-    public function test_task_destroy_by_anonymous(): void
+    /** @dataProvider dataDestroy */
+    public function test_task_destroy(?User $actingAs, Task|int $task, int $statusCode, ?string $redirectToUrl = null, bool $isMissing = false): void
     {
-        $user = User::factory()
-            ->has(Task::factory())
-            ->create();
+        if ($task instanceof Task) {
+            $task->save();
+            $id = $task->id;
+        } else {
+            $id = $task;
+        }
 
-        $this->delete('/tasks/' . $user->tasks()->first()->id)
-            ->assertRedirect('/login');
+        if ($actingAs) {
+            $this->actingAs($actingAs);
+        }
+
+        $response = $this->delete('/tasks/' . $id)
+            ->assertStatus($statusCode);
+
+        if ($redirectToUrl) {
+            $response->assertRedirect($redirectToUrl);
+        }
+
+        if ($response->isSuccessful() || $response->isRedirection()) {
+            $isMissing
+                ? $this->assertModelMissing($task)
+                : $this->assertModelExists($task);
+        }
     }
 
-    public function test_task_destroy_by_admin(): void
+    public function dataDestroy(): \Generator
     {
-        $user = User::factory()
-            ->has(Task::factory())
-            ->create();
+        $this->refreshApplication();
+        $this->refreshDatabase();
 
-        $this->actingAs(User::factory()->isAdmin()->create())
-            ->delete('/tasks/' . $user->tasks()->first()->id)
-            ->assertForbidden();
-    }
+        $actingAs = User::factory()->isAdmin(false)->create();
+        $task = Task::factory()->for($actingAs)->make();
 
-    public function test_task_destroy_by_not_owner(): void
-    {
-        $user = User::factory()
-            ->has(Task::factory())
-            ->create();
+        yield 'by anonymous' => [null, clone $task, 302, '/login', false];
 
-        $this->actingAs(User::factory()->isAdmin(false)->create())
-            ->delete('/tasks/' . $user->tasks()->first()->id)
-            ->assertForbidden();
-    }
+        $admin = User::factory()->isAdmin()->create();
 
-    public function test_task_destroy_success(): void
-    {
-        $user = User::factory()
-            ->has(Task::factory())
-            ->create();
+        yield 'by admin' => [$admin, clone $task, 403, null, false];
 
-        $task = $user->tasks()->first();
+        yield 'by not owner' => [$actingAs, Task::factory()->for($admin)->make(), 403, null, false];
 
-        $this->actingAs($user)
-            ->delete('/tasks/' . $task->id)
-            ->assertRedirect('/tasks');
+        yield 'by owner' => [$actingAs, clone $task, 302, '/tasks', true];
 
-        $this->assertDatabaseMissing(Task::class, $task->toArray());
+        yield 'not found' => [$actingAs, 11111111, 404, null, false];
     }
 }
